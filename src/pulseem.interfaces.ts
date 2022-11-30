@@ -35,3 +35,18 @@ export enum PulseemEmailStatus {
   BlockedDueToSyncFeature = 20,
   BlockDueToRemoval = 21,
 }
+
+export type PulseemSmsData = {
+  fromNumber: string;
+  toNumbers: string | string[];
+  text: string | string[];
+  externalRef?: string | string[];
+  isAutomaticUnsubscribeLink?: boolean;
+  sendTime?: string;
+};
+
+export type PulseemSmsOptions = {
+  sendId: string;
+  isAsync?: boolean;
+  smsSendData: PulseemSmsData;
+};

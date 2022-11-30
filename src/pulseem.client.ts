@@ -4,10 +4,12 @@ import {
   PULSEEM_API_URL,
   PULSEEM_EMAIL_ENDPOINT,
   PULSEEM_EMAIL_REPORT_ENDPOINT,
+  PULSEEM_SMS_ENDPOINT,
 } from './pulseem.constants';
 import {
   PulseemEmailOptions,
   PulseemModuleOptions,
+  PulseemSmsOptions,
 } from './pulseem.interfaces';
 
 export class PulseemClient {
@@ -66,7 +68,53 @@ export class PulseemClient {
       });
 
       return response;
-    } catch (e) {}
+    } catch (e) {
+      return {
+        data: null,
+        error: e?.message || e,
+      };
+    }
+  }
+
+  async sendSms({
+    sendId,
+    isAsync = false,
+    smsSendData: {
+      fromNumber,
+      toNumbers,
+      text,
+      externalRef,
+      isAutomaticUnsubscribeLink = false,
+    },
+  }: PulseemSmsOptions) {
+    toNumbers = Array.isArray(toNumbers) ? toNumbers : [toNumbers];
+    text = Array.isArray(text) ? text : [text];
+
+    externalRef = !externalRef
+      ? Array(toNumbers.length).fill(0)
+      : Array.isArray(externalRef)
+      ? externalRef
+      : [externalRef];
+
+    try {
+      const response = await this.client.post(PULSEEM_SMS_ENDPOINT, {
+        SendId: sendId,
+        IsAsync: isAsync,
+        SMSSendData: {
+          FromNumber: fromNumber,
+          ToNumberList: toNumbers,
+          ReferenceList: externalRef,
+          TextList: text,
+          IsAutomaticUnsubscribeLink: isAutomaticUnsubscribeLink,
+        },
+      });
+      return response;
+    } catch (e) {
+      return {
+        data: null,
+        error: e?.message || e,
+      };
+    }
   }
 
   async getEmailReportByDate(startDateSeconds: number, endDateSeconds: number) {
