@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PulseemClient } from './pulseem.client';
 import { PULSEEM_CLIENT_PROVIDER } from './pulseem.constants';
-import { PulseemEmailOptions } from './pulseem.interfaces';
+import { PulseemEmailOptions, PulseemSmsOptions } from './pulseem.interfaces';
 
 @Injectable()
 export class PulseemService {
@@ -12,6 +12,10 @@ export class PulseemService {
 
   async sendEmail(options: PulseemEmailOptions) {
     return await this.pulseemClient.sendEmail(options);
+  }
+
+  async sendSms(options: PulseemSmsOptions) {
+    return await this.pulseemClient.sendSms(options);
   }
 
   async getEmailReportByDate(startDateSeconds: number, endDateSeconds: number) {

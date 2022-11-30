@@ -4,10 +4,12 @@ import {
   PULSEEM_API_URL,
   PULSEEM_EMAIL_ENDPOINT,
   PULSEEM_EMAIL_REPORT_ENDPOINT,
+  PULSEEM_SMS_ENDPOINT,
 } from './pulseem.constants';
 import {
   PulseemEmailOptions,
   PulseemModuleOptions,
+  PulseemSmsOptions,
 } from './pulseem.interfaces';
 
 export class PulseemClient {
@@ -23,39 +25,42 @@ export class PulseemClient {
     });
   }
 
-  async sendEmail(options: PulseemEmailOptions) {
-    const sendEmailData = options.emailSendData;
+  async sendEmail({
+    sendId,
+    emailSendData: {
+      subject,
+      html,
+      toEmails,
+      fromEmail,
+      fromName,
+      toNames,
+      externalRef,
+    },
+  }: PulseemEmailOptions) {
+    subject = Array.isArray(subject) ? subject : [subject];
+    html = Array.isArray(html) ? subject : [html];
+    toEmails = Array.isArray(toEmails) ? toEmails : [toEmails];
 
-    const subject = Array.isArray(sendEmailData.subject)
-      ? sendEmailData.subject
-      : [sendEmailData.subject];
+    toNames = !toNames
+      ? toEmails.map((email: string) => email.split('@')[0])
+      : Array.isArray(toNames)
+      ? toNames
+      : [toNames];
 
-    const HTML = Array.isArray(sendEmailData.HTML)
-      ? sendEmailData.subject
-      : [sendEmailData.HTML];
-
-    const toEmails = Array.isArray(sendEmailData.toEmails)
-      ? sendEmailData.toEmails
-      : [sendEmailData.toEmails];
-
-    const toNames = toEmails.map((email: string) => {
-      return email.split('@')[0];
-    });
-
-    const externalRef = !sendEmailData.externalRef
+    externalRef = !externalRef
       ? Array(toEmails.length).fill(0)
-      : Array.isArray(sendEmailData.externalRef)
-      ? sendEmailData.externalRef
-      : [sendEmailData.externalRef];
+      : Array.isArray(externalRef)
+      ? externalRef
+      : [externalRef];
 
     try {
       const response = await this.client.post(PULSEEM_EMAIL_ENDPOINT, {
-        SendId: options.sendId,
+        SendId: sendId,
         EmailSendData: {
-          FromEmail: sendEmailData.fromEmail,
-          FromName: sendEmailData.fromName,
+          FromEmail: fromEmail,
+          FromName: fromName,
           Subject: subject,
-          HTML: HTML,
+          HTML: html,
           ToEmails: toEmails,
           ToNames: toNames,
           ExternalRef: externalRef,
@@ -63,7 +68,53 @@ export class PulseemClient {
       });
 
       return response;
-    } catch (e) {}
+    } catch (e) {
+      return {
+        data: null,
+        error: e?.message || e,
+      };
+    }
+  }
+
+  async sendSms({
+    sendId,
+    isAsync = false,
+    smsSendData: {
+      fromNumber,
+      toNumbers,
+      text,
+      externalRef,
+      isAutomaticUnsubscribeLink = false,
+    },
+  }: PulseemSmsOptions) {
+    toNumbers = Array.isArray(toNumbers) ? toNumbers : [toNumbers];
+    text = Array.isArray(text) ? text : [text];
+
+    externalRef = !externalRef
+      ? Array(toNumbers.length).fill(0)
+      : Array.isArray(externalRef)
+      ? externalRef
+      : [externalRef];
+
+    try {
+      const response = await this.client.post(PULSEEM_SMS_ENDPOINT, {
+        SendId: sendId,
+        IsAsync: isAsync,
+        SMSSendData: {
+          FromNumber: fromNumber,
+          ToNumberList: toNumbers,
+          ReferenceList: externalRef,
+          TextList: text,
+          IsAutomaticUnsubscribeLink: isAutomaticUnsubscribeLink,
+        },
+      });
+      return response;
+    } catch (e) {
+      return {
+        data: null,
+        error: e?.message || e,
+      };
+    }
   }
 
   async getEmailReportByDate(startDateSeconds: number, endDateSeconds: number) {
@@ -79,7 +130,12 @@ export class PulseemClient {
       });
 
       return response;
-    } catch (e) {}
+    } catch (e) {
+      return {
+        data: null,
+        error: e?.message || e,
+      };
+    }
   }
 
   async getEmailReportByRef(externalRef: string) {
@@ -89,6 +145,11 @@ export class PulseemClient {
       });
 
       return response;
-    } catch (e) {}
+    } catch (e) {
+      return {
+        data: null,
+        error: e?.message || e,
+      };
+    }
   }
 }
