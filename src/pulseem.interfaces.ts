@@ -6,8 +6,9 @@ export type PulseemEmailData = {
   fromEmail: string;
   fromName: string;
   subject: string | string[];
-  HTML: string | string[];
+  html: string | string[];
   toEmails: string | string[];
+  toNames?: string | string[];
   externalRef?: string | string[];
   sendTime?: string;
 };
